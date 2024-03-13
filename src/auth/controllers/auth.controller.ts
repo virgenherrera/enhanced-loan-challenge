@@ -2,9 +2,9 @@ import { Controller, Body } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { ValidateDto } from 'src/utils';
-import { RegisterDto } from '../dto';
+import { LoginDto, LoginResponseDto, RegisterDto } from '../dto';
 import { Logger } from 'src/decorators';
-import { AuthRegisterDocs } from '../docs';
+import { AuthLoginDocs, AuthRegisterDocs } from '../docs';
 import { AuthService } from '../services';
 
 @ApiTags('auth')
@@ -29,5 +29,16 @@ export class AuthController {
 
       throw error;
     }
+  }
+
+  @AuthLoginDocs()
+  async login(@Body() loginDto: LoginDto): Promise<LoginResponseDto> {
+    this.logger.log(`Login attempt for user: ${loginDto.username}`);
+
+    const data = await this.authService.login(loginDto);
+
+    this.logger.verbose(`Login successful for user: ${loginDto.username}`);
+
+    return data;
   }
 }

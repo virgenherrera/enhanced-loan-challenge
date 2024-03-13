@@ -1,10 +1,16 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities';
 import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
 
 import { Logger } from 'src/decorators';
-import { RegisterDto } from '../dto';
+import { LoginDto, LoginResponseDto, RegisterDto } from '../dto';
+import { transformToDto, validateRawAndHash } from 'src/utils';
 
 @Injectable()
 export class AuthService {
@@ -12,7 +18,8 @@ export class AuthService {
 
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async register(dto: RegisterDto): Promise<User> {
@@ -36,6 +43,22 @@ export class AuthService {
     return newUser;
   }
 
+  async login({ username, password }: LoginDto): Promise<LoginResponseDto> {
+    this.logger.log(`attempting to register username: ${username} `);
+
+    const user = await this.getUserByUsername(username);
+
+    if (user && validateRawAndHash(password, user.password)) {
+      this.logger.verbose(`Login successful for user: ${user.username}`);
+      const access_token = await this.generateJwt(user);
+
+      return transformToDto({ access_token }, LoginResponseDto);
+    } else {
+      this.logger.warn(`Invalid login attempt for user: ${username}`);
+      throw new UnauthorizedException('Invalid login credentials');
+    }
+  }
+
   private async getUserByUsername(username: string): Promise<User | null> {
     this.logger.log(`attempting to find User with username: "${username}".`);
 
@@ -49,5 +72,13 @@ export class AuthService {
     this.logger.verbose(logMsg);
 
     return user;
+  }
+
+  private async generateJwt(user: User): Promise<string> {
+    this.logger.log(`Generating JWT for user: ${user.username}`);
+
+    const payload = { username: user.username, sub: user.id, role: user.role };
+
+    return this.jwtService.signAsync(payload);
   }
 }
