@@ -1,5 +1,10 @@
 import { HttpCode, HttpStatus, Post, applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiConflictResponse,
+} from '@nestjs/swagger';
 
 import { RegisterDto } from '../dto';
 
@@ -12,6 +17,7 @@ export function AuthRegisterDocs() {
       summary: 'Register a new user',
     }),
     ApiBody({ type: RegisterDto }),
+    ApiConflictResponse({ description: 'Username is already taken' }),
     ApiResponse({
       status: HttpStatus.NO_CONTENT,
       description: 'User registered successfully',
