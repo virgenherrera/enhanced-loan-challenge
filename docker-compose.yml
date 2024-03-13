@@ -1,0 +1,37 @@
+version: '3.8'
+
+# Global environment variables for demonstration purposes.
+# WARNING: It's insecure to leave sensitive information like database credentials in this file for production environments.
+# This setup is intended for demonstration purposes only.
+x-environment: &global-environment
+  DB_USERNAME: rootUsr
+  DB_PASSWORD: rootPass
+  DB_NAME: fooPassword
+  DB_PORT: 5432
+  DB_HOST: db
+
+services:
+  db:
+    image: postgres:16.2
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      <<: *global-environment
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

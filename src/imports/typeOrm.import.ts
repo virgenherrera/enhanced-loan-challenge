@@ -9,6 +9,7 @@ export class TypeOrmConfig {
         const username = configService.get('DB_USERNAME');
         const password = configService.get('DB_PASSWORD');
         const database = configService.get('DB_NAME');
+        const host = configService.get('DB_HOST');
         const port = configService.get('DB_PORT');
 
         if (!username)
@@ -17,6 +18,8 @@ export class TypeOrmConfig {
           throw new Error('Unable to find "DB_PASSWORD" environment variable');
         if (!database)
           throw new Error('Unable to find "DB_NAME" environment variable');
+        if (!host)
+          throw new Error('Unable to find "DB_HOST" environment variable');
         if (!port)
           throw new Error('Unable to find "DB_PORT" environment variable');
 
@@ -29,6 +32,7 @@ export class TypeOrmConfig {
           username,
           password,
           database,
+          host,
           port,
           synchronize: true,
           entities,
