@@ -1,26 +1,31 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Body } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import { PostApplicationDto, ApplicationResponseDto } from '../dto';
 import { ValidateDto, transformToDto } from 'src/utils';
 import { Logger } from 'src/decorators';
+import { ApplicationsService } from '../services';
+import { PostApplicationDocs } from '../docs';
 
+@ApiTags('applications')
 @Controller('applications')
 export class ApplicationsController {
   @Logger() private logger: Logger;
 
-  @Post()
-  create(
+  constructor(private readonly applicationsService: ApplicationsService) {}
+
+  @PostApplicationDocs()
+  async create(
     @Body(ValidateDto.pipe) body: PostApplicationDto,
-  ): ApplicationResponseDto {
+  ): Promise<ApplicationResponseDto> {
     this.logger.log(`handling POST /applications`);
 
-    const foo = transformToDto(
-      { ...body, id: 1, createdAt: new Date(), updatedAt: new Date() },
-      ApplicationResponseDto,
-    );
+    const newApplication = await this.applicationsService.create(body);
 
-    console.log(foo, foo instanceof PostApplicationDto);
+    const data = transformToDto(newApplication, ApplicationResponseDto);
 
-    return foo;
+    this.logger.verbose(`Application with id: "${data.id}" was created`);
+
+    return data;
   }
 }
